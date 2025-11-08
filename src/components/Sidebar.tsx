@@ -1,0 +1,101 @@
+import { useEffect, useState } from 'react'
+import { useFilter } from './FilterContent';
+interface Product {
+    category: string
+}
+
+interface FetchResponse {
+    products: Product[]
+}
+const Sidebar = () => {
+    const {searchQuery, setSearchQuery, selectedCategory ,setselectedCategory, minPrice, setMinPrice, maxPrice, setMaxPrice, keyword,setKeyword} = useFilter();
+    const [categories,setCategories] = useState<string[]>([])
+    const [keywords] = useState<string[]>([
+        "apple",
+        "watch",
+        "fashion",
+        "trend",
+        "shoes",
+        "shirt",
+    ])
+    useEffect(() => {
+        const fetchCategories = async() => {
+            try{
+                const response = await fetch("https://dummyjson.com/products")
+                const data:FetchResponse = await response.json()
+                const uniqueCategories = Array.from(new Set(data.products.map(product => product.category)))
+                setCategories(uniqueCategories)
+            } catch (error){
+                console.log(error)
+            }
+        }
+
+
+        fetchCategories()
+    },[])
+
+    const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        setMinPrice(value ? parseFloat(value): undefined)
+    }
+    const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        setMaxPrice(value ? parseFloat(value): undefined)
+    }
+    const handleRadioChangeCategories = (category:string) => {
+        setselectedCategory(category)
+    }
+    const handleKeywordClick = (keyword:string) => {
+        setKeyword(keyword)
+    }
+    const handleReset = () => {
+        setSearchQuery('')
+        setKeyword('')
+        setselectedCategory('')
+        setMinPrice(undefined)
+        setMaxPrice(undefined)
+    }
+    
+  return (
+    <div className='w-64 p-5 h-screen'>
+        <h1 className='font-bold text-2xl mb-10 mt-4'>BuyIt</h1>
+
+        <section>
+            <input type="text" className='border-2 rounded px-2 sm:mb-0' placeholder='Search Shi' value={searchQuery} onChange={e => setSearchQuery(e.target.value)}/>
+            <div className="flex justify-center items-center">
+                <input type="text" className='border-2 mr-2 px-5 py-3 mb-3 w-full mt-5' placeholder='Min' value={minPrice ?? ''} onChange={handleMinPriceChange}/>
+                <input type="text" className='border-2 mr-2 px-5 py-3 mb-3 w-full mt-5' placeholder='Max' value={maxPrice ?? ''} onChange={handleMaxPriceChange}/>
+            </div>
+
+
+        {/*Categories*/}
+        <div className='mb-5'>
+            <h2 className='text-xl font-semibold mb-3'>Categories</h2>
+        </div>
+        <section>
+            {categories.map((category,index)=> (
+                <label key={index} className='block mb-2'>
+                    <input type="radio" name='category' value={category} onChange={() => handleRadioChangeCategories(category)} checked={selectedCategory === category} className='mr-2 w-5 h-5' />
+                    {category.toUpperCase()}
+                </label>
+            ))}
+        </section>
+
+        {/* Keywords Section */}
+        <div className='mb-5 mt-3'>
+            <h2 className="text-xl font-semibold mb-3">Keywords</h2>
+            <div>
+                {keywords.map((keyword,index)=>(
+                    <button key={index} className='block mb-2 py-2 px-2 w-full text-left border rounded hover:bg-gray-200' onChange={() => handleKeywordClick(keyword)}>
+                        {keyword.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+        </div>
+        <button className='w-full mb-[4rem] bg-black py-2 text-white rounded ' onClick={handleReset}>Reset</button>
+        </section>
+    </div>
+  )
+}
+
+export default Sidebar
