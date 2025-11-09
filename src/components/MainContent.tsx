@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useFilter } from "./FilterContent"
 import { Tally3 } from 'lucide-react';
 import axios from "axios";
+import BookCard from "./BookCard";
 
 const MainContent = () => {
   const {searchQuery, selectedCategory, minPrice, maxPrice, keyword} = useFilter()
@@ -13,7 +14,7 @@ const MainContent = () => {
 
 
   useEffect(()=>{
-      let url = `https://dummyjson.com/products?limit=${itemperpage}&skip=${(currentPage-1)*itemsPerPage}`
+      let url = `https://dummyjson.com/products?limit=${itemsPerPage}&skip=${(currentPage-1)*itemsPerPage}`
       if (keyword){
         url = `https://dummyjson.com/products/search?q=${keyword}`
       }
@@ -26,10 +27,51 @@ const MainContent = () => {
 
   },[currentPage,keyword])
 
-  
+  const getFilteredProducts = () => {
+    let filteredProducts = products
+
+    if (selectedCategory) {
+      filteredProducts.filter((product) => product.category === selectedCategory)
+      console.log(filteredProducts)
+    }
+
+
+    if (minPrice !== undefined){
+      filteredProducts = filteredProducts.filter(product => product.price >= minPrice)
+    }
+
+    if (maxPrice !== undefined){
+      filteredProducts = filteredProducts.filter(product => product.price <= maxPrice)
+    }
+    
+    if (searchQuery) {
+      filteredProducts = filteredProducts.filter(product => product.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    }
+
+    switch(filter){
+      case "expensive":
+        return filteredProducts.sort((a,b) => b.price - a.price)
+      case "cheap":
+        return filteredProducts.sort((a,b) => a.price - b.price)
+      case "popular":
+        return filteredProducts.sort((a,b) => b.rating - a.rating)
+      default:
+        return filteredProducts
+    }
 
 
 
+  }
+
+  const filteredProducts = getFilteredProducts()
+
+  const totalProducts = 100
+  const totalPages = Math.ceil(totalProducts / itemsPerPage)
+  const handlePageChange = (page: number) => {
+    if (page>0 && page<=totalPages){
+      setCurrentPage(page)
+    }
+  }
 
 
   return (
@@ -59,9 +101,15 @@ const MainContent = () => {
           </div>
         </div>
           <div className="grid grid-cols-4 sm:grid-cols-3 sm:grid-cols-4 gap-3">
-            {/* Card */}
+            {filteredProducts.map(product => (
+              <BookCard key = {product.id} id={product.id} title={product.title} image = {product.thumbnail} price={product.price}/>
+            ))}
           </div>
-
+              {/* PAGINATIONNNNNNNN */}
+            <div className="flex flex-col sm:flex-row justify-between itemsc-enter mt-5">
+              <button onClick={() => handlePageChange(currentPage-1)} disabled={currentPage === 1} className="border px-4 py-2 mx-2 rounded-full">Previous</button>
+              <button onClick={() => handlePageChange(currentPage+1)} disabled={currentPage === totalPages} className="border px-4 py-2 mx-2 rounded-full">Next</button>
+            </div>
 
       </div>
 
